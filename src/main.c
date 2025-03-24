@@ -3,8 +3,10 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include <stdbool.h>
+#include <unistd.h>
+#include <pthread.h>
+
 #include "config.h"
-#include "params.h"
 
 #define WINDOW_TITLE "Toast"
 #define FONT "/usr/share/fonts/truetype/freefont/FreeSans.ttf"
@@ -18,18 +20,26 @@ struct Params* params = NULL;
 struct ToastConfig* config = NULL;
 bool running;
 
+void* delayEnd(void* vargp) {
+	int duration = *(int*)vargp;
+	int i = 0;
+	while (i++ < duration && running) {
+		sleep(1);
+	}
+	running = false;
+	return NULL;
+}
 
 bool init(int argc, char* argv[]) {
 	//Init SDL
 	SDL_Init(SDL_INIT_EVERYTHING);
 
-	window = SDL_CreateWindow(WINDOW_TITLE, 100, 100, 200, 100, SDL_WINDOW_BORDERLESS);
-	renderer = SDL_CreateRenderer(window, -1, 0);
 	TTF_Init();
 	theme = mainTheme();
 	font = TTF_OpenFont(FONT, 24);
-	initParams(argc, argv, params);
-	initToastConfig(params,config); 
+	config = initToastConfig(argc, argv); 
+	window = SDL_CreateWindow(WINDOW_TITLE, config->position->x, config->position->y, config->w, config->h, SDL_WINDOW_BORDERLESS);
+	renderer = SDL_CreateRenderer(window, -1, 0);
 	return true;
 }
 
@@ -54,32 +64,36 @@ void update() {
 }
 
 void render() {
+	// backgournd
 	setColor(renderer, theme->background); 
 	SDL_RenderClear(renderer);
 
+	// text container
 	setColor(renderer, theme->textContainer);	
 	SDL_Rect textContainer = {
-		25,
-		25,
-		150,
-		50
+		10,
+		10,
+		config->w - 20,
+		config->h - 20
 	};
 	SDL_RenderFillRect(renderer, &textContainer);
 	
-	SDL_Surface *textSurface = TTF_RenderText_Solid(font, "du texte a la la", *theme->text);
+	// text
+	SDL_Surface *textSurface = TTF_RenderText_Solid(font, config->text, *theme->text);
 	SDL_Texture *textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
 	SDL_Rect textRect = {25, 25, textSurface->w, textSurface->h};
 	SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
 
 
 	SDL_RenderPresent(renderer);
+	SDL_FreeSurface(textSurface);
+	SDL_DestroyTexture(textTexture);
 }
 
 int main(int argc, char* argv[]){
 	running = init(argc, argv);
-	SDL_DisplayMode dm;
-	SDL_GetDesktopDisplayMode(0, &dm);
-	printf("%d, %d", dm.w, dm.h);
+	pthread_t t_id;
+	pthread_create(&t_id, NULL, delayEnd, &(config->duration));
 	//Content
 	while (running) {
 		input();
@@ -91,8 +105,8 @@ int main(int argc, char* argv[]){
 	SDL_DestroyRenderer(renderer);
 	SDL_DestroyWindow(window);
 	SDL_Quit();
+	pthread_join(t_id, NULL);
 	freeTheme(theme);
-	freeParams(params);
 	freeToastConfig(config);
 	return EXIT_SUCCESS;
 }

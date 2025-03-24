@@ -1,6 +1,7 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
-#include "params.h"
 
 #ifndef CONFIG_H
 #define CONFIG_H
@@ -23,13 +24,15 @@ struct ToastConfig {
 	char *text;
 	int w;
 	int h;
+	int duration;
 };
 
 struct Theme* mainTheme();
 void freeTheme(struct Theme* theme);
 void setColor(SDL_Renderer* renderer, SDL_Color* color);
-void initToastConfig(struct Params* params, struct ToastConfig* config);
+struct ToastConfig* initToastConfig(int argc, char** argv);
 void freeToastConfig(struct ToastConfig* config);
-
+char* getParam(const char* head, int argc, char** argv);
+bool hasParam(const char* head, int argc, char** argv);
 
 #endif //CONFIG_H
