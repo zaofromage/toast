@@ -92,7 +92,7 @@ void render() {
 
 int main(int argc, char* argv[]){
 	if (hasParam("--help", argc, argv)) {
-		printf("toast [...params] :\n   -t text to print\n   -p place to display {bottomright, bottomleft, topright, topleft} (default bottomright)\n   -d lifetime (default 5)\n   -w custom width (default fit well with text)\n   -h custom height (default fit well with text)\n");
+		printf("toast [params] :\n        -t      text to print\n        -p      place to display {bottomright, bottomleft, topright, topleft} (default bottomright)\n        -d      lifetime (default 5)\n        -w      custom width (default fit well with text)\n        -h      custom height (default fit well with text)\n        --help  this\n Click on the window to close it\n");
 		return (EXIT_SUCCESS);
 	}
 	running = init(argc, argv);
