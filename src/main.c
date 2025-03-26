@@ -37,7 +37,7 @@ bool init(int argc, char* argv[]) {
 	TTF_Init();
 	theme = mainTheme();
 	font = TTF_OpenFont(FONT, 24);
-	config = initToastConfig(argc, argv); 
+	config = initToastConfig(argc, argv, font); 
 	window = SDL_CreateWindow(WINDOW_TITLE, config->position->x, config->position->y, config->w, config->h, SDL_WINDOW_BORDERLESS);
 	renderer = SDL_CreateRenderer(window, -1, 0);
 	return true;
@@ -79,7 +79,7 @@ void render() {
 	SDL_RenderFillRect(renderer, &textContainer);
 	
 	// text
-	SDL_Surface *textSurface = TTF_RenderText_Solid(font, config->text, *theme->text);
+	SDL_Surface *textSurface = TTF_RenderText_Blended(font, config->text, *theme->text);
 	SDL_Texture *textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
 	SDL_Rect textRect = {25, 25, textSurface->w, textSurface->h};
 	SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
@@ -105,6 +105,7 @@ int main(int argc, char* argv[]){
 	SDL_DestroyRenderer(renderer);
 	SDL_DestroyWindow(window);
 	SDL_Quit();
+	TTF_Quit();
 	pthread_join(t_id, NULL);
 	freeTheme(theme);
 	freeToastConfig(config);

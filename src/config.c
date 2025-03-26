@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
 #include <string.h>
 #include <ctype.h>
 #include "config.h"
@@ -41,7 +42,7 @@ void setColor(SDL_Renderer *renderer, SDL_Color* color) {
 }
 
 struct Position* getPosition(char *place, int w, int h, int screenW, int screenH) {
-	for ( ; *place; ++place) *place = tolower(*place);
+	for (int i = 0; i < strlen(place); ++i) place[i] = tolower(place[i]);
 	struct Position *res = malloc(sizeof(struct Position));
 	if (strcmp(place, "topleft") == 0) {
 		res->x = 50;
@@ -69,34 +70,40 @@ struct Position* getPosition(char *place, int w, int h, int screenW, int screenH
  * -w width
  * -h height
  */
-struct ToastConfig* initToastConfig(int argc, char** argv) {
+struct ToastConfig* initToastConfig(int argc, char** argv, TTF_Font* font) {
 	SDL_DisplayMode dm;
 	SDL_GetDesktopDisplayMode(0, &dm);
 	struct ToastConfig* config = malloc(sizeof(struct ToastConfig));
+	int tw, th;
 	if (!config) return NULL;
 	if (hasParam("-t", argc, argv)) {
 		char* text = getParam("-t", argc, argv);
+		TTF_SizeText(font, text, &tw, &th);
 		config->text = strdup(text);
 		free(text);
 	} else {
+		TTF_SizeText(font, "Texte par defaut", &tw, &th);
 		config->text = strdup("Texte par defaut");
 	}
 	if (hasParam("-w", argc, argv)) {
 		config->w = atoi(getParam("-w", argc, argv));
 	} else {
-		config->w = 200;
+
+		config->w = 25 + tw + 25;
 	}
 	if (hasParam("-h", argc, argv)) {
 		config->h = atoi(getParam("-h", argc, argv));
 	} else {
-		config->h = 75;
+		config->h = 25 + th + 25;
 	}
 	if (hasParam("-p", argc, argv)) {
 		char* place = getParam("-p", argc, argv);
 		config->position = getPosition(place, config->w, config->h, dm.w, dm.h);
 		free(place);
 	} else {
-		config->position = getPosition("bottomright", config->w, config->h, dm.w, dm.h);
+		char* place = strdup("bottomright");
+		config->position = getPosition(place, config->w, config->h, dm.w, dm.h);
+		free(place);
 	}
 
 	if (hasParam("-d", argc, argv)){
@@ -126,7 +133,6 @@ char* getParam(const char* head, int argc, char** argv) {
     for (int i = 0; i < argc; i++) {
         if (strcmp(head, argv[i]) == 0) {
             if (i + 1 < argc && argv[i + 1][0] != '-') {
-		printf("%d", i+1);
                 return strdup(argv[i + 1]);
             } else {
                 fprintf(stderr, "Error : %s must be followed by a valid value (toast --help)\n", head);
