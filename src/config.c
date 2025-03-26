@@ -121,7 +121,7 @@ void freeToastConfig(struct ToastConfig* config) {
 
 bool hasParam(const char* head, int argc, char** argv) {
 	int i;
-	for (i = 0; i < argc-1; i++) {
+	for (i = 0; i < argc; i++) {
 		if (strcmp(head, argv[i]) == 0) {
 			return true;
 		}
